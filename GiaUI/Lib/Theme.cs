@@ -3,14 +3,14 @@
 namespace GiaUI.Lib
 {
     internal struct Theme(
-        ANSI defCol
+        Color defCol
     ) {
-        public List<ANSI>? Colors { get; set; }
+        public List<Color>? Colors { get; set; }
 
-        public ANSI DefaultColor = defCol;
-        public ANSI ErrorColor = defCol;
-        public ANSI WarningColor = defCol;
-        public ANSI InfoColor = defCol;
+        public Color DefaultColor = defCol;
+        public Color ErrorColor = defCol;
+        public Color WarningColor = defCol;
+        public Color InfoColor = defCol;
 
         public List<NS>? NameTexts { get; set; } = null;
 

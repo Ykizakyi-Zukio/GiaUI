@@ -9,10 +9,7 @@
         }
     }
 
-    public struct ANSI(string name, string color) {
-        public string Name { get; set; } = name;
-        public string Color { get; set; } = color;
-    }
+    
 
     public struct NS(string name, string text) {
         public string Name { get; set; } = name;
