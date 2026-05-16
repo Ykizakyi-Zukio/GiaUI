@@ -18,4 +18,13 @@ namespace GiaUI.Data
         public static string SetBackground(int r, int g, int b) => $"{ESC}[48;2;{r};{g};{b}m";
         public static string Reset = $"{ESC}[0m";
     }
+
+    public struct RGB
+    {
+        public int R, G, B;
+
+        public RGB(int r, int g, int b) {
+            R = r; G = g; B = b;
+        }
+    }
 }
