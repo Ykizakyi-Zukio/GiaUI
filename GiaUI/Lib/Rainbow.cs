@@ -6,7 +6,7 @@ namespace GiaUI.Lib
     internal class Rainbow : IDecorator
     {
         public RGB? Rgb { get; set; }
-        public double Phase { get; set; }
+        public double Phase { get; set; } = 3D;
         public StringBuilder Buffer => new();
         public string? Text { get; set; }
 
@@ -22,9 +22,8 @@ namespace GiaUI.Lib
             Phase = _phase;
         }
 
-        public async Task<string> Decorate(string text)
+        public string Decorate(string text)
         {
-            
             if (string.IsNullOrEmpty(text)) throw new Exception("Set text");
             Buffer.Clear();
 
@@ -34,11 +33,12 @@ namespace GiaUI.Lib
                 int g = (int)(Math.Sin(sinAngle * i + Phase + upper) * 127 + 128);
                 int b = (int)(Math.Sin(sinAngle * i + Phase + upper * 2) * 127 + 128);
 
+                //Console.Write($"\x1b[38;2;{r};{g};{b}m{text[i]}");
                 Buffer.Append($"\x1b[38;2;{r};{g};{b}m{text[i]}");
             }
 
             Buffer.Append("\x1b[0m");
-            Phase += 0.1D;
+            Console.WriteLine(Buffer.ToString());
             return Buffer.ToString();
         }
     }

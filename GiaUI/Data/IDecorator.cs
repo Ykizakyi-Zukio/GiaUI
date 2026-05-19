@@ -7,7 +7,7 @@
         public double Phase { get; set; }
         public string? Text { get; set; }
 
-        public abstract Task<string> Decorate(string text);
-        public async Task<string> Decorate() => await Decorate(Text ?? throw new Exception("Set text"));
+        public abstract string Decorate(string text);
+        public string Decorate() => Decorate(Text ?? throw new Exception("Set text"));
     }
 }

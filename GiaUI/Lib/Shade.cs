@@ -23,7 +23,7 @@ namespace GiaUI.Lib
             brightness = _brightness;
         }
 
-        public async Task<string> Decorate(string text)
+        public string Decorate(string text)
         {
             if (string.IsNullOrEmpty(text)) throw new Exception("Set text");
             Buffer.Clear();
@@ -31,7 +31,6 @@ namespace GiaUI.Lib
             if (Rgb == null)
                 throw new Exception("Please choose base color");
 
-            //var sb = new StringBuilder();
             for (int i = 0; i < text.Length; i++)
             {
                 double brightness = Math.Cos(0.2 * i + Phase) * 0.4 + 0.6;
@@ -43,7 +42,6 @@ namespace GiaUI.Lib
                 Buffer.Append($"\x1b[38;2;{r};{g};{b}m{text[i]}");
             }
             Buffer.Append("\x1b[0m");
-            Phase += 0.1D;
             return Buffer.ToString();
         }
     }

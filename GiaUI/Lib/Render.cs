@@ -49,6 +49,7 @@ public class Animation
         string output = "";
         
         IsPlaying = true;
+        StringBuilder builder = new();
         
 
         _ = Task.Run(async () =>
@@ -58,7 +59,12 @@ public class Animation
                 while (IsPlaying && !ct.IsCancellationRequested)
                 {
                     foreach (var dec in DecoratorGroup)
-                        if (dec.Text != null) output += dec.Decorate() + Separator;
+                    {
+                        builder.Append(dec.Decorate() + Separator);
+                        dec.Phase += 0.1D;
+                    }
+
+                    output = builder.ToString();
 
                     lock (consoleLock)
                     {
