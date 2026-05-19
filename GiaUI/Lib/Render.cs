@@ -2,86 +2,37 @@ using GiaUI.Data;
 using System;
 using System.Text;
 
-public class Renderer
-{
-    protected Double phase = 0D;
-
-    public RGB? BaseColor { get; set; }
-    public string? Text { get; set; }
-
-    public async Task<string> RainbowAsync(StringBuilder buffer, double sinAngle = 0.2D, byte upper = 2)
-    {
-        if (string.IsNullOrEmpty(Text)) throw new Exception("Set text");
-        buffer.Clear();
-
-        for (int i = 0; i < Text.Length; i++)
-        {
-            int r = (int)(Math.Sin(sinAngle * i + phase + 0) * 127 + 128);
-            int g = (int)(Math.Sin(sinAngle * i + phase + upper) * 127 + 128);
-            int b = (int)(Math.Sin(sinAngle * i + phase + upper * 2) * 127 + 128);
-
-            buffer.Append($"\x1b[38;2;{r};{g};{b}m{Text[i]}");
-        }
-
-        buffer.Append("\x1b[0m");
-        phase += 0.1;
-        return buffer.ToString();
-    }
-
-    public async Task<string> ShadeAsync(StringBuilder buffer)
-    {
-        if (string.IsNullOrEmpty(Text)) throw new Exception("Set text");
-        buffer.Clear();
-
-        if (BaseColor == null)
-            throw new Exception("Please choose base color");
-
-        //var sb = new StringBuilder();
-        for (int i = 0; i < Text.Length; i++)
-        {
-            double brightness = Math.Cos(0.2 * i + phase) * 0.4 + 0.6;
-
-            int r = (int)(BaseColor?.R* brightness);
-            int g = (int)(BaseColor?.G * brightness);
-            int b = (int)(BaseColor?.B * brightness);
-
-            buffer.Append($"\x1b[38;2;{r};{g};{b}m{Text[i]}");
-        }
-        buffer.Append("\x1b[0m");
-        phase += 0.1D;
-        return buffer.ToString();
-    }
-}
-
-public class Animation : Renderer
+public class Animation
 {
     public bool IsPlaying = false;
     public int WaitFromMs;
     public int PosX, PosY;
-    public AnimationType AnimationType;
+    public IDecorator[] DecoratorGroup;
+    public string Separator = "\r\n";
+    public string Text { get; set; } = string.Empty;
 
-    private CancellationTokenSource cts;
+    private CancellationTokenSource? cts;
     private CancellationToken ct;
     private readonly object consoleLock = new();
-    StringBuilder sb = new();
 
 
-    public Animation(int waitfromms, AnimationType animationType) 
+    public Animation(int waitFromMs, IDecorator[] dec, 
+        int posX = 0, int posY = 0)
     {
-        AnimationType = animationType;
-        PosX = Console.CursorLeft;
-        PosY = Console.CursorTop;
-        WaitFromMs = waitfromms;
-        cts = new CancellationTokenSource();
-        ct = cts.Token;
-    }
-    public Animation(int waitfromms, AnimationType animationType, int posX, int posY)
-    {
-        AnimationType = animationType;
         PosX = posX; PosY = posY;
-        WaitFromMs = waitfromms;
-        cts = new CancellationTokenSource();
-        ct = cts.Token;
+        WaitFromMs = waitFromMs;
+        DecoratorGroup = dec;
+
+        if (DecoratorGroup[0].CanAnimate)
+            DecoratorGroup[0].Phase = 0D;
+        else
+            throw new Exception("This decorator can't be animated");
+    }
+
+    public Animation Single(int waitFromMs, IDecorator dec,
+        int posX = 0, int posY = 0)
+    {
+        return new Animation(waitFromMs, [dec], posX, posY);
     }
 
     public void Start()
@@ -92,8 +43,11 @@ public class Animation : Renderer
         cts = new();
         ct = cts.Token;
 
-        string output;
-        phase = 0;
+        foreach (var dec in DecoratorGroup)
+            dec.Phase = 0D;
+
+        string output = "";
+        
         IsPlaying = true;
         
 
@@ -103,12 +57,8 @@ public class Animation : Renderer
             {
                 while (IsPlaying && !ct.IsCancellationRequested)
                 {
-                    string output = AnimationType switch
-                    {
-                        AnimationType.Rainbow => await RainbowAsync(sb),
-                        AnimationType.Shade => await ShadeAsync(sb),
-                        _ => string.Empty
-                    };
+                    foreach (var dec in DecoratorGroup)
+                        if (dec.Text != null) output += dec.Decorate() + Separator;
 
                     lock (consoleLock)
                     {
@@ -147,10 +97,4 @@ public class Animation : Renderer
 
         IsPlaying = false;
     }
-}
-
-public enum AnimationType : byte
-{
-    Rainbow,
-    Shade
 }
