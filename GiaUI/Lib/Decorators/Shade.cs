@@ -45,5 +45,23 @@ namespace GiaUI.Lib
             Buffer.Append("\x1b[0m");
             return Buffer.ToString();
         }
+
+        public char[] Decorate(char[] chars)
+        {
+            Buffer.Clear();
+            if (Rgb == null)
+                throw new Exception("Please choose base color");
+            Buffer.EnsureCapacity(chars.Length * 20);
+            for (int i = 0; i < chars.Length; i++)
+            {
+                double brightness = Math.Cos(0.2 * i + Phase) * 0.4 + 0.6;
+                int r = (int)(Rgb?.R * brightness);
+                int g = (int)(Rgb?.G * brightness);
+                int b = (int)(Rgb?.B * brightness);
+                Buffer.Append($"\x1b[38;2;{r};{g};{b}m{chars[i]}");
+            }
+            Buffer.Append("\x1b[0m");
+            return Buffer.ToString().ToCharArray();
+        }
     }
 }

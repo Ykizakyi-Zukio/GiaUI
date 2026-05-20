@@ -9,5 +9,7 @@
 
         public abstract string Decorate(string text);
         public string Decorate() => Decorate(Text ?? throw new Exception("Set text"));
+
+        public char[] Decorate(char[] chars);
     }
 }

@@ -44,6 +44,21 @@ namespace GiaUI.Lib
             return Buffer.ToString();
         }
 
+        public char[] Decorate(char[] chars)
+        {
+            Buffer.Clear();
+            Buffer.EnsureCapacity(chars.Length * 20);
+            for (int i = 0; i < chars.Length; i++)
+            {
+                int r = (int)(Math.Sin(sinAngle * i + Phase + 0) * 127 + 128);
+                int g = (int)(Math.Sin(sinAngle * i + Phase + upper) * 127 + 128);
+                int b = (int)(Math.Sin(sinAngle * i + Phase + upper * 2) * 127 + 128);
+                Buffer.Append($"\x1b[38;2;{r};{g};{b}m{chars[i]}");
+            }
+            Buffer.Append("\x1b[0m");
+            return Buffer.ToString().ToCharArray();
+        }
+
         public string Decorate() => Decorate(Text ?? throw new InvalidOperationException("Text property is not set."));
     }
 }

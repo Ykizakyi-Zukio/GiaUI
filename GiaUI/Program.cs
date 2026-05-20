@@ -12,15 +12,19 @@ class Program
         Console.CursorVisible = false;
         ConsoleHelper.EnableAnsi();
 
-        List<IDecorator> decs = new();
-        for (int i = 0; i < 20; i++)
-        {
-            decs.Add(new Shade(new(Random.Shared.Next(10, 255), Random.Shared.Next(0, 255), Random.Shared.Next(30, 255)), 1f));
-            decs[i].Text = Random.Shared.Next(100000, 200000).ToString();
-        }
+        var table = new Table() { Style = TableStyle.Rounded, Padding = 2 };
+        Rainbow rnbw = new();
 
-        Animation animation = new(20, decs.ToArray());
-        animation.Start();
+        table.AddColumn("Name");
+        table.AddColumn("Age");
+
+        table.AddRow("George", 45);
+        table.AddRow("Alice", 30);
+
+        table.Print(rnbw);
+
+        char[] chars = "Hello, World!".ToCharArray();
+        Console.WriteLine(rnbw.Decorate(chars));
 
         Console.ReadKey();
     }
