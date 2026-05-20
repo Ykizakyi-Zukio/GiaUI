@@ -1,6 +1,6 @@
 ﻿namespace GiaUI.Data
 {
-    public class Label
+    public struct Label
     {
         public string Text { get; set; }
         public Label(string text)

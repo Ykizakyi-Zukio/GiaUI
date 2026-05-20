@@ -1,10 +1,11 @@
+using Cysharp.Text;
 using GiaUI.Data;
-using System;
+using System.Diagnostics;
 using System.Text;
 
 public class Animation
 {
-    public bool IsPlaying = false;
+    public bool IsPlaying { get; private set; } = false;
     public int WaitFromMs;
     public int PosX, PosY;
     public IDecorator[] DecoratorGroup;
@@ -12,27 +13,29 @@ public class Animation
     public string Text { get; set; } = string.Empty;
 
     private CancellationTokenSource? cts;
-    private CancellationToken ct;
     private readonly object consoleLock = new();
+    private readonly StringBuilder builder;
 
-
-    public Animation(int waitFromMs, IDecorator[] dec, 
-        int posX = 0, int posY = 0)
+    public Animation(int waitFromMs, IDecorator[] dec, int posX = 0, int posY = 0)
     {
-        PosX = posX; PosY = posY;
+        PosX = posX;
+        PosY = posY;
         WaitFromMs = waitFromMs;
-        DecoratorGroup = dec;
+        DecoratorGroup = dec ?? throw new ArgumentNullException(nameof(dec));
 
-        if (DecoratorGroup[0].CanAnimate)
-            DecoratorGroup[0].Phase = 0D;
-        else
-            throw new Exception("This decorator can't be animated");
+        if (DecoratorGroup.Length == 0)
+            throw new ArgumentException("Decorator group cannot be empty.", nameof(dec));
+
+        if (!DecoratorGroup[0].CanAnimate)
+            throw new InvalidOperationException("This decorator can't be animated");
+
+        DecoratorGroup[0].Phase = 0D;
+        builder = new(2096);
     }
 
-    public Animation Single(int waitFromMs, IDecorator dec,
-        int posX = 0, int posY = 0)
+    public static Animation Single(int waitFromMs, IDecorator dec, int posX = 0, int posY = 0)
     {
-        return new Animation(waitFromMs, [dec], posX, posY);
+        return new Animation(waitFromMs, new[] { dec }, posX, posY);
     }
 
     public void Start()
@@ -40,45 +43,48 @@ public class Animation
         if (IsPlaying) return;
         Console.CursorVisible = false;
 
-        cts = new();
-        ct = cts.Token;
+        cts = new CancellationTokenSource();
+        var ct = cts.Token;
 
-        foreach (var dec in DecoratorGroup)
-            dec.Phase = 0D;
+        for (int i = 0; i < DecoratorGroup.Length; i++)
+        {
+            DecoratorGroup[i].Phase = 0D;
+        }
 
-        string output = "";
-        
         IsPlaying = true;
-        StringBuilder builder = new();
-        
 
         _ = Task.Run(async () =>
         {
             try
             {
-                while (IsPlaying && !ct.IsCancellationRequested)
+                while (!ct.IsCancellationRequested)
                 {
-                    foreach (var dec in DecoratorGroup)
+                    builder.Clear();
+
+                    for (int i = 0; i < DecoratorGroup.Length; i++)
                     {
-                        builder.Append(dec.Decorate() + Separator);
+                        var dec = DecoratorGroup[i];
+                        builder.Append(dec.Decorate());
+                        if (i < DecoratorGroup.Length - 1)
+                        {
+                            builder.Append(Separator);
+                        }
                         dec.Phase += 0.1D;
                     }
-
-                    output = builder.ToString();
 
                     lock (consoleLock)
                     {
                         if (!ct.IsCancellationRequested)
                         {
                             Console.SetCursorPosition(PosX, PosY);
-                            Console.Write(output);
+                            Console.Out.Write(builder.ToString());
                         }
                     }
 
                     await Task.Delay(WaitFromMs, ct);
                 }
             }
-            catch (TaskCanceledException) { }
+            catch (OperationCanceledException) { }
             finally
             {
                 IsPlaying = false;
@@ -88,7 +94,7 @@ public class Animation
 
     public void Stop()
     {
-        if(!IsPlaying) return;
+        if (!IsPlaying) return;
 
         cts?.Cancel();
         cts?.Dispose();
@@ -96,8 +102,7 @@ public class Animation
 
         lock (consoleLock)
         {
-            int lastRow = Console.BufferHeight - 1;
-            Console.SetCursorPosition(0, lastRow);
+            Console.SetCursorPosition(0, Math.Min(Console.CursorTop + DecoratorGroup.Length, Console.BufferHeight - 1));
             Console.CursorVisible = true;
         }
 

@@ -12,30 +12,15 @@ class Program
         Console.CursorVisible = false;
         ConsoleHelper.EnableAnsi();
 
-        Rainbow rnbw = new(0.5f, 2) { Text = "Hello world!"};
-        Shade shade = new( new(140, 30, 67), 0.6f) { Text = "Hello world, again.." };
-
-        Animation animation = new(20, [rnbw]);
-        Console.Write(rnbw.Decorate("Hello worlddddddd") + "HELLO");
-        //animation.Start();
-
-        StringBuilder Buffer = new();
-        float sinAngle = 0.3f;
-        byte upper = 2;
-        double Phase = 0;
-        string text = "Hello world";
-
-        for (int i = 0; i < text.Length; i++)
+        List<IDecorator> decs = new();
+        for (int i = 0; i < 20; i++)
         {
-            int r = (int)(Math.Sin(sinAngle * i + Phase + 0) * 127 + 128);
-            int g = (int)(Math.Sin(sinAngle * i + Phase + upper) * 127 + 128);
-            int b = (int)(Math.Sin(sinAngle * i + Phase + upper * 2) * 127 + 128);
-
-            Buffer.Append($"\x1b[38;2;{r};{g};{b}m{text[i]}");
+            decs.Add(new Shade(new(Random.Shared.Next(10, 255), Random.Shared.Next(0, 255), Random.Shared.Next(30, 255)), 1f));
+            decs[i].Text = Random.Shared.Next(100000, 200000).ToString();
         }
 
-        Buffer.Append("\x1b[0m");
-        Console.WriteLine(Buffer.ToString());
+        Animation animation = new(20, decs.ToArray());
+        animation.Start();
 
         Console.ReadKey();
     }

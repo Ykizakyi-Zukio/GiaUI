@@ -10,12 +10,11 @@ namespace GiaUI.Lib
     {
         public RGB? Rgb { get; set; }
         public double Phase { get; set; }
-        public StringBuilder Buffer => new();
+        public StringBuilder Buffer { get; } = new();
         public string? Text { get; set; }
+        public bool CanAnimate => true;
 
         private readonly float brightness = 0.5f;
-
-        public bool CanAnimate => true;
 
         public Shade(RGB rgb, float _brightness)
         {
@@ -25,11 +24,13 @@ namespace GiaUI.Lib
 
         public string Decorate(string text)
         {
-            if (string.IsNullOrEmpty(text)) throw new Exception("Set text");
+            if (string.IsNullOrEmpty(text)) return string.Empty;
             Buffer.Clear();
 
             if (Rgb == null)
                 throw new Exception("Please choose base color");
+
+            Buffer.EnsureCapacity(text.Length * 20);
 
             for (int i = 0; i < text.Length; i++)
             {

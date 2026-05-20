@@ -1,5 +1,6 @@
 ﻿using GiaUI.Data;
 using System.Text;
+using Cysharp.Text;
 
 namespace GiaUI.Lib
 {
@@ -7,16 +8,16 @@ namespace GiaUI.Lib
     {
         public RGB? Rgb { get; set; }
         public double Phase { get; set; } = 3D;
-        public StringBuilder Buffer => new();
+
+        public StringBuilder Buffer { get; } = new();
         public string? Text { get; set; }
 
         public bool CanAnimate => true;
 
-        private float sinAngle = 0.3f;
+        private float sinAngle;
         private const byte upper = 2;
 
-        public Rainbow() { }
-        public Rainbow(float _sinAngle, double _phase)
+        public Rainbow(float _sinAngle = 0.3f, double _phase = 0)
         {
             sinAngle = _sinAngle;
             Phase = _phase;
@@ -24,8 +25,10 @@ namespace GiaUI.Lib
 
         public string Decorate(string text)
         {
-            if (string.IsNullOrEmpty(text)) throw new Exception("Set text");
+            if (string.IsNullOrEmpty(text)) return string.Empty;
             Buffer.Clear();
+
+            Buffer.EnsureCapacity(text.Length * 20);
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -33,13 +36,14 @@ namespace GiaUI.Lib
                 int g = (int)(Math.Sin(sinAngle * i + Phase + upper) * 127 + 128);
                 int b = (int)(Math.Sin(sinAngle * i + Phase + upper * 2) * 127 + 128);
 
-                //Console.Write($"\x1b[38;2;{r};{g};{b}m{text[i]}");
                 Buffer.Append($"\x1b[38;2;{r};{g};{b}m{text[i]}");
             }
 
             Buffer.Append("\x1b[0m");
-            Console.WriteLine(Buffer.ToString());
+
             return Buffer.ToString();
         }
+
+        public string Decorate() => Decorate(Text ?? throw new InvalidOperationException("Text property is not set."));
     }
 }
